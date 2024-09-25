@@ -1,11 +1,22 @@
+import "reflect-metadata";
+
 import { Command } from "commander";
 export { Controller } from "./decrorators/Controller";
-import { Module } from "./decrorators/Module";
-export { Module };
+export { Options } from "./decrorators/Options";
+// import { Module } from "./decrorators/Module";
+// export { Module };
 export const CommanderFactory = {
-  create(module: any[]) {
+  create(Ctor: any) {
+    const cmd = Reflect.getMetadata("commandName", Ctor);
+    const options = Reflect.getMetadata("options", Ctor);
     const program = new Command();
-    module.forEach;
-    program.parse(process.argv);
+    program
+      .command(cmd)
+      .option(`--${options[0].name}`, options[0].description)
+      .action(() => {
+        new Ctor();
+      });
+    program.parse([...process.argv.slice(0, 2), cmd]);
+    // program.parse([...process.argv.slice(0, 2), cmd, `--${options[0].name}`]);
   },
 };

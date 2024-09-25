@@ -1,15 +1,22 @@
 import { describe, it, vi, expect } from "vitest";
-import { Command } from "commander";
-
+import { Controller, Options, CommanderFactory } from "../src/index";
 describe("测试", () => {
   it("命令行", () => {
-    const program = new Command();
     const fn = vi.fn();
-    program.command("test").action(() => {
-      fn();
-    });
-    const argv = ["", "", "test"];
-    program.parse(argv);
+    @Controller("git")
+    @Options([
+      {
+        name: "delete",
+        short: "d",
+        description: "",
+      },
+    ])
+    class Git {
+      constructor() {
+        fn();
+      }
+    }
+    CommanderFactory.create(Git);
     expect(fn).toHaveBeenCalled();
   });
 });

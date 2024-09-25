@@ -1,9 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES6",
-    "experimentalDecorators": true,
-    "outDir": "lib",
-    "moduleResolution": "NodeNext",
-    "module": "NodeNext"
+    "target": "ES2015",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "outDir": "./dist/",
+    "baseUrl": "./src",
+    "noEmit": true,
+    "allowSyntheticDefaultImports": true
   }
 }
