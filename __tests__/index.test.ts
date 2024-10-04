@@ -8,7 +8,7 @@ import {
   Module,
 } from "../src";
 
-describe("只有引入一个模块", () => {
+describe("只有引入一个控制器", () => {
   beforeEach(() => {
     vi.stubGlobal("process", {
       argv: ["", "", "git", "--delete"],
@@ -35,7 +35,7 @@ describe("只有引入一个模块", () => {
     expect(fn).toHaveBeenCalled();
   });
 });
-describe("引入两个模块", () => {
+describe("引入两个控制器", () => {
   beforeEach(() => {
     vi.stubGlobal("process", {
       argv: ["", "", "npm", "--search"],
@@ -71,7 +71,75 @@ describe("引入两个模块", () => {
   });
 });
 
-describe("测试子命令", () => {
+describe("一个控制器，含子命令", () => {
+  beforeEach(() => {
+    vi.stubGlobal("process", {
+      argv: ["", "", "git", "tag", "-d"],
+    });
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("命令行", async () => {
+    const fn = vi.fn();
+    @Command("git")
+    class Git {
+      @SubCommand("tag")
+      @DefineSubOptions([["-d, --delete", ""]])
+      tag() {
+        fn();
+      }
+    }
+    @Module({
+      controllers: [Git],
+    })
+    class GitModule {}
+
+    @Module({
+      imports: [GitModule],
+    })
+    class App {}
+    CommanderFactory.create(App);
+    expect(fn).toHaveBeenCalled();
+  });
+});
+describe("一个控制器，调用提供者", () => {
+  beforeEach(() => {
+    vi.stubGlobal("process", {
+      argv: ["", "", "git", "tag", "-d"],
+    });
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("命令行", async () => {
+    const fn = vi.fn();
+    class GitService {
+      main() {
+        fn();
+      }
+    }
+    @Command("git")
+    class Git {
+      constructor(private gitService: GitService) {}
+      @SubCommand("tag")
+      @DefineSubOptions([["-d, --delete", ""]])
+      tag() {
+        this.gitService.main();
+      }
+    }
+    @Module({
+      controllers: [Git],
+      providers: [GitService],
+    })
+    class App {}
+    CommanderFactory.create(App);
+    expect(fn).toHaveBeenCalled();
+  });
+});
+describe("一个控制器，含子模块", () => {
   beforeEach(() => {
     vi.stubGlobal("process", {
       argv: ["", "", "git", "tag", "-d"],
