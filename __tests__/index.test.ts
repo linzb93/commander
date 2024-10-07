@@ -167,3 +167,39 @@ describe("一个控制器，含子模块", () => {
     expect(fn).toHaveBeenCalled();
   });
 });
+describe.only("一个控制器，子命令方法有参数", () => {
+  beforeEach(() => {
+    vi.stubGlobal("process", {
+      argv: ["", "", "git", "tag", "v10.0.0", "-d"],
+    });
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("命令行", async () => {
+    const fn1 = vi.fn();
+    const fn2 = vi.fn();
+    @Command("git")
+    class Git {
+      @SubCommand("tag")
+      @DefineSubOptions([["-d, --delete", ""]])
+      tag(option: any) {
+        // fn1(name);
+        fn2(option);
+      }
+    }
+    @Module({
+      controllers: [Git],
+    })
+    class GitModule {}
+
+    @Module({
+      imports: [GitModule],
+    })
+    class App {}
+    CommanderFactory.create(App);
+    // expect(fn1).toHaveBeenCalledWith("v10.0.0");
+    expect(fn2).toHaveBeenCalledWith(true);
+  });
+});

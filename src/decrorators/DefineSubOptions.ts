@@ -1,8 +1,11 @@
-import { subOptionsName } from "../shared/constant";
+import { defineSubOptionsName } from "../shared/constant";
 
 export const DefineSubOptions = (opt: [string, string][]) => {
   return (target: any, propertyKey: Symbol | string, _: PropertyDescriptor) => {
-    let optionsMap = Reflect.getMetadata(subOptionsName, target.constructor);
+    let optionsMap = Reflect.getMetadata(
+      defineSubOptionsName,
+      target.constructor
+    );
     if (optionsMap) {
       optionsMap.push({
         methodName: propertyKey,
@@ -16,6 +19,10 @@ export const DefineSubOptions = (opt: [string, string][]) => {
         },
       ];
     }
-    Reflect.defineMetadata(subOptionsName, optionsMap, target.constructor);
+    Reflect.defineMetadata(
+      defineSubOptionsName,
+      optionsMap,
+      target.constructor
+    );
   };
 };

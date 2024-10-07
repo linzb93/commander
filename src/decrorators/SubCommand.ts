@@ -1,6 +1,10 @@
 import { subCommandName } from "../shared/constant";
 export const SubCommand = (name: string) => {
-  return (target: any, propertyKey: Symbol | string, _: PropertyDescriptor) => {
+  return (
+    target: any,
+    propertyKey: Symbol | string,
+    descriptor: PropertyDescriptor
+  ) => {
     let nameMap = Reflect.getMetadata(
       subCommandName,
       target.constructor
@@ -19,5 +23,10 @@ export const SubCommand = (name: string) => {
       ];
     }
     Reflect.defineMetadata(subCommandName, nameMap, target.constructor);
+    let method = descriptor.value;
+    descriptor.value = function (...args: any[]) {
+      const realArgs = args.map((arg, index) => {});
+      return method.apply(this, realArgs);
+    };
   };
 };

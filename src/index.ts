@@ -8,8 +8,8 @@ import { SubStruct } from "./shared/types";
 import {
   commandName,
   subCommandName,
-  optionsName,
-  subOptionsName,
+  defineOptionsName,
+  defineSubOptionsName,
   controllersName,
   providersName,
   modulesName,
@@ -21,14 +21,14 @@ function resolveModule(Module: any, program: Commander) {
   const providers = Reflect.getMetadata(providersName, Module);
   const modules = Reflect.getMetadata(modulesName, Module);
   if (modules) {
-    modules.forEach((m) => resolveModule(m, program));
+    modules.forEach((m: any) => resolveModule(m, program));
   }
   if (!ctrls) {
     return;
   }
   ctrls.forEach((Ctrl: any) => {
     const topCommandName = Reflect.getMetadata(commandName, Ctrl) as string;
-    const topOpts = Reflect.getMetadata(optionsName, Ctrl) as [
+    const topOpts = Reflect.getMetadata(defineOptionsName, Ctrl) as [
       string,
       string
     ][];
@@ -37,15 +37,16 @@ function resolveModule(Module: any, program: Commander) {
       Ctrl
     ) as SubStruct[]; // 子命令列表
     const allSubOptions = Reflect.getMetadata(
-      subOptionsName,
+      defineSubOptionsName,
       Ctrl
     ) as SubStruct[];
     if (subCommandList) {
       subCommandList.forEach((cmdObj) => {
         const { methodName } = cmdObj;
-        const subOpts = !allSubOptions
-          ? []
-          : allSubOptions.find((item) => item.methodName === methodName).data;
+        const matchDbItem = allSubOptions.find(
+          (item) => item.methodName === methodName
+        );
+        const subOpts = !allSubOptions ? [] : matchDbItem.data;
 
         let startRegisterOptions = program.command(
           `${topCommandName} ${cmdObj.data}`
@@ -58,13 +59,15 @@ function resolveModule(Module: any, program: Commander) {
             );
           }
         }
-        startRegisterOptions.action(() => {
+        startRegisterOptions.action((...args: any[]) => {
+          const realArgs = cmdObj.data ? args.slice(1) : args;
+          console.log(realArgs);
           if (providers) {
-            new Ctrl(...providers.map((provider) => new provider()))[
+            new Ctrl(...providers.map((provider: any) => new provider()))[
               methodName
-            ]();
+            ](...realArgs);
           } else {
-            new Ctrl()[methodName]();
+            new Ctrl()[methodName](...realArgs);
           }
         });
       });
@@ -76,11 +79,13 @@ function resolveModule(Module: any, program: Commander) {
           topOpts[i][1]
         );
       }
-      startRegisterOptions.action(() => {
+      startRegisterOptions.action((...args: any[]) => {
         if (providers) {
-          new Ctrl(...providers.map((provider) => new provider())).main();
+          new Ctrl(...providers.map((provider: any) => new provider())).main(
+            ...args
+          );
         } else {
-          new Ctrl().main();
+          new Ctrl().main(...args);
         }
       });
     }
